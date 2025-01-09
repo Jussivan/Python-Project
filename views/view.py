@@ -4,7 +4,7 @@ from models.model import Subscription, Payments
 from sqlmodel import Session, select
 from datetime import date, datetime
 
-class SubscriptionSevice:
+class SubscriptionService:
     def __init__(self, engine):
         self.engine = engine
 
@@ -63,15 +63,14 @@ class SubscriptionSevice:
         today = datetime.now()
         year = today.year
         month = today.month
-        last_12_month = []
+        last_12_months = []
         for _ in range(12):
-            last_12_month.append((month, year))
+            last_12_months.append((month, year))
             month -= 1
-            if(month == 0):
+            if month == 0:
                 month = 12
                 year -= 1
-
-        return last_12_month[::-1]
+        return last_12_months[::-1]
 
     def _get_values_for_months(self, last_12_months):
         with Session(self.engine) as session:
@@ -82,20 +81,19 @@ class SubscriptionSevice:
                 value = 0
                 for result in results:
                     if result.date.month == i[0] and result.date.year == i[1]:
-                        value += float(result.subscription.value)
+                        value += float(result.subscription.valor)
                 value_for_months.append(value)
-            return value_for_months
+        return value_for_months
 
     def gen_chart(self):
         last_12_months = self._get_last_12_months_native()
+        print(last_12_months)
         values_for_months = self._get_values_for_months(last_12_months)
+        print(values_for_months)
         last_12_months = list(map(lambda x: x[0], self._get_last_12_months_native()))
+        print(last_12_months)
 
         import matplotlib.pyplot as plt
 
         plt.plot(last_12_months, values_for_months)
         plt.show()
-
-
-ss = SubscriptionSevice(engine)
-print(ss.gen_chart())
